@@ -219,7 +219,7 @@ def main():
         time.sleep(3)
         prev = api.publish(part, reply_to=prev)
 
-    if slot and not force:
+    if slot:
         state["last_slot"] = slot
     state["history"].append({"time": now.isoformat(timespec="minutes"), "post": post_id(text),
                              "image": image, "threads_id": first_id})
