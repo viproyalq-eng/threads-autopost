@@ -1,0 +1,30 @@
+name: Оновлення токена Threads
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Продовжити токен
+        env:
+          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ Не задано секрет GH_PAT — токен Threads не можна оновити автоматично."
+            exit 1
+          fi
+          RESP=$(curl -s "https://graph.threads.net/refresh_access_token?grant_type=th_refresh_token&access_token=$THREADS_TOKEN")
+          NEW=$(echo "$RESP" | jq -r '.access_token // empty')
+          if [ -z "$NEW" ]; then
+            echo "❌ Не вдалося оновити токен: $RESP"
+            exit 1
+          fi
+          echo "::add-mask::$NEW"
+          gh secret set THREADS_TOKEN --repo "$REPO" --body "$NEW"
+          echo "✅ Токен продовжено ще на 60 днів."
